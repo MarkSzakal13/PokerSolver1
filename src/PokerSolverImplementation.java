@@ -1,9 +1,5 @@
 import java.util.List;
-
-import components.simplereader.SimpleReader;
-import components.simplereader.SimpleReader1L;
-import components.simplewriter.SimpleWriter;
-import components.simplewriter.SimpleWriter1L;
+import java.util.Scanner;
 
 /**
  * A class implementing a poker solver which provides suggestions for the player
@@ -24,30 +20,29 @@ public final class PokerSolverImplementation {
      *            command-line arguments
      */
     public static void main(String[] args) {
-        SimpleReader in = new SimpleReader1L();
-        SimpleWriter out = new SimpleWriter1L();
+        Scanner scanner = new Scanner(System.in);
 
         boolean running = true;
 
         while (running) {
             // Display menu
-            out.println("Position: ");
-            out.println("1: UTG");
-            out.println("2: UTG+1");
-            out.println("3: UTG+2");
-            out.println("4: Lojack");
-            out.println("5: Hijack");
-            out.println("6: Cutoff");
-            out.println("7: Button");
-            out.println("8: Small Blind");
+            System.out.println("Position: ");
+            System.out.println("1: UTG");
+            System.out.println("2: UTG+1");
+            System.out.println("3: UTG+2");
+            System.out.println("4: Lojack");
+            System.out.println("5: Hijack");
+            System.out.println("6: Cutoff");
+            System.out.println("7: Button");
+            System.out.println("8: Small Blind");
 
-            int position = Integer.parseInt(in.nextLine().trim());
+            int position = Integer.parseInt(scanner.nextLine().trim());
 
-            out.println("Enter Hand: ");
-            String cards = in.nextLine().trim();
+            System.out.println("Enter Hand: ");
+            String cards = scanner.nextLine().trim();
 
-            out.println("Current Bet: ");
-            Double currentBet = Double.parseDouble(in.nextLine().trim());
+            System.out.println("Current Bet: ");
+            Double currentBet = Double.parseDouble(scanner.nextLine().trim());
 
             PokerSolverOnList solver = new PokerSolverOnList();
             String[] cardArray = cards.split(",");
@@ -60,20 +55,18 @@ public final class PokerSolverImplementation {
             String shouldCall = PokerSolverOnList.recommendation(position,
                     playerCards);
 
-            out.println("\nPlayer Position: " + position);
-            out.println("Current Bet: $" + currentBet);
-            out.println("Player Cards: ");
+            System.out.println("\nPlayer Position: " + position);
+            System.out.println("Current Bet: $" + currentBet);
+            System.out.println("Player Cards: ");
             for (PokerSolverOnList.Card card : playerCards) {
-                out.println(" - Value: " + card.getValue() + ", Suit: "
-                        + card.getSuit());
+                System.out.println(" - Value: " + card.value().name()
+                        + ", Suit: " + card.suit().getSuit());
             }
 
-            out.println("Recommendation: " + shouldCall);
+            System.out.println("Recommendation: " + shouldCall);
 
         }
 
-        in.close();
-        out.close();
-
+        scanner.close();
     }
 }

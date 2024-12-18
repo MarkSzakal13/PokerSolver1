@@ -3,189 +3,184 @@ import java.util.List;
 
 /**
  * Class to represent PokerSolver kernel methods including addCard,
- * getPlayerCards, getValues, getSuits, and parseCardValues.
+ * getPlayerCards, and recommendations for poker hands.
  */
 public class PokerSolverOnList {
 
     /**
-     * Defines constants for all face cards.
+     * Enum to represent values of cards.
      */
-    public static final class CardConstants {
+    public enum Rank {
         /**
-         * Constant for the value of a 3.
+         * Enum values 2 through ace.
          */
-        public static final int TWO = 2;
+        TWO(2), THREE(3), FOUR(4), FIVE(5), SIX(6), SEVEN(7), EIGHT(8), NINE(
+                9), TEN(10), JACK(11), QUEEN(12), KING(13), ACE(14);
 
         /**
-         * Constant for the value of a 3.
+         * Value representing each card.
          */
-        public static final int THREE = 3;
+        private final int value;
 
         /**
-         * Constant for the value of a 4.
-         */
-        public static final int FOUR = 4;
-
-        /**
-         * Constant for the value of a 5.
-         */
-        public static final int FIVE = 5;
-
-        /**
-         * Constant for the value of an 6.
-         */
-        public static final int SIX = 6;
-
-        /**
-         * Constant for the value of a 7.
-         */
-        public static final int SEVEN = 7;
-
-        /**
-         * Constant for the value of a 8.
-         */
-        public static final int EIGHT = 8;
-
-        /**
-         * Constant for the value of a 9.
-         */
-        public static final int NINE = 9;
-
-        /**
-         * Constant for the value of an 10.
-         */
-        public static final int TEN = 10;
-
-        /**
-         * Constant for the value of a Jack.
-         */
-        public static final int JACK = 11;
-
-        /**
-         * Constant for the value of a Queen.
-         */
-        public static final int QUEEN = 12;
-
-        /**
-         * Constant for the value of a King.
-         */
-        public static final int KING = 13;
-
-        /**
-         * Constant for the value of an Ace.
-         */
-        public static final int ACE = 14;
-
-        /**
-         *
-         */
-        private CardConstants() {
-
-        }
-    }
-
-    /**
-     * Class to represent each card.
-     */
-    public static class Card {
-        /**
-         * value of the card.
-         */
-        private final String value;
-        /**
-         * suit of the card.
-         */
-        private final String suit;
-
-        /**
-         * Constructs card using value and suit.
+         * Constructor for rank.
          *
          * @param value
-         *            The value of each card.
-         * @param suit
-         *            The suit of each card.
+         *            The numeric value of rank.
          */
-        public Card(String value, String suit) {
+        Rank(int value) {
             this.value = value;
-            this.suit = suit;
         }
 
         /**
-         * Returns the value of the card.
+         * Gets the numeric value.
          *
-         * @return The value of the card.
+         * @return The numeric value of the rank.
          */
-        public String getValue() {
+        public int getValue() {
             return this.value;
         }
 
         /**
-         * Returns the suit of the card.
+         * Parses a string representation into an enum.
          *
-         * @return The suit of the card.
+         * @param value
+         *            The string version of the rank.
+         * @return The rank enum.
          */
-        public String getSuit() {
-            return this.suit;
-        }
-
-        /**
-         * Converts value and suit to string.
-         */
-        @Override
-        public String toString() {
-            return this.value + this.suit;
+        public static Rank parseCardValue(String value) {
+            switch (value.toLowerCase()) {
+                case "j":
+                    return JACK;
+                case "q":
+                    return QUEEN;
+                case "k":
+                    return KING;
+                case "a":
+                    return ACE;
+                default:
+                    return values()[Integer.parseInt(value) - 2];
+            }
         }
     }
 
     /**
-     * Initializes playerCards.
+     * Enum for suits.
+     */
+    public enum Suit {
+        /**
+         * Enums representing each of the 4 suits.
+         */
+        CLUBS('c'), HEARTS('h'), DIAMONDS('d'), SPADES('s');
+
+        /**
+         * Suit for each card.
+         */
+        private final char suit;
+
+        /**
+         * Constructor for suit.
+         *
+         * @param suit
+         *            The suit of the card.
+         */
+        Suit(char suit) {
+            this.suit = suit;
+        }
+
+        /**
+         * Gets the suit.
+         *
+         * @return The cards suit.
+         */
+        public char getSuit() {
+            return this.suit;
+        }
+
+        /**
+         * Parses the char version of the suit into a Suit enum.
+         *
+         * @param suitChar
+         *            The char representation of the suit.
+         * @return The suit enum.
+         */
+        public static Suit parseCardSuit(char suitChar) {
+            for (Suit suit : values()) {
+                if (suit.suit == suitChar) {
+                    return suit;
+                }
+            }
+            throw new IllegalArgumentException("Invalid suit: " + suitChar);
+        }
+    }
+
+    /**
+     * Record for a card which includes value and suit.
+     *
+     * @param value
+     *            The value of the card.
+     * @param suit
+     *            The value of the suit.
+     */
+    public record Card(Rank value, Suit suit) {
+        @Override
+        public String toString() {
+            return this.value.name() + this.suit.getSuit();
+        }
+    }
+
+    /**
+     * Private list to store the players cards.
      */
     private List<Card> playerCards;
 
     /**
-     * Constructs an empty hand by setting playerCards, values, and suits all to
-     * null.
+     * Constructor for PokerSolverOnList.
      */
     public PokerSolverOnList() {
         this.createNewRep();
     }
 
     /**
-     * Creates a new rep of PokerSolverOnX.
+     * Creates an empty, new hand.
      */
     private void createNewRep() {
         this.playerCards = new ArrayList<>();
     }
 
     /**
-     * Adds cards to the player's hand by passing in value and suit.
+     * Adds card to the players hand.
      *
      * @param card
-     *            The card being imported.
-     * @requires card != null
-     * @ensures The card is added to the players hand with value and suit being
-     *          stored.
+     *            The version of the card.
      */
     public void addCard(String card) {
         int index = -1;
 
-        for (char suit : new char[] { 'c', 'h', 'd', 's' }) {
-            int suitIndex = card.indexOf(suit);
+        for (Suit suit : Suit.values()) {
+            int suitIndex = card.indexOf(suit.getSuit());
             if (suitIndex != -1 && (index == -1 || suitIndex < index)) {
                 index = suitIndex;
             }
         }
 
-        String value = card.substring(0, index).trim();
-        String suit = card.substring(index, index + 1);
+        if (index == -1) {
+            throw new IllegalArgumentException("Invalid card format: " + card);
+        }
 
-        this.playerCards.add(new Card(value, suit));
+        String valueChar = card.substring(0, index).trim();
+        char suitChar = card.charAt(index);
+
+        Rank rank = Rank.parseCardValue(valueChar);
+        Suit suit = Suit.parseCardSuit(suitChar);
+
+        this.playerCards.add(new Card(rank, suit));
     }
 
     /**
-     * Gets the players cards.
+     * Gets a list of the players cards.
      *
-     * @return Returns the players cards.
+     * @return A list of the players cards.
      */
     public List<Card> getPlayerCards() {
         return new ArrayList<>(this.playerCards);
@@ -201,14 +196,12 @@ public class PokerSolverOnList {
      * @return The recommendation for the player to raise, call, or fold.
      */
     public static String recommendation(int position, List<Card> playerCards) {
-
         List<Integer> values = new ArrayList<>();
-        List<String> suits = new ArrayList<>();
+        List<Suit> suits = new ArrayList<>();
 
         for (Card card : playerCards) {
-            int numVal = parseCardValue(card.getValue());
-            values.add(numVal);
-            suits.add(card.getSuit());
+            values.add(card.value().getValue());
+            suits.add(card.suit());
         }
 
         reOrder(values);
@@ -230,13 +223,11 @@ public class PokerSolverOnList {
      *            values of each card.
      */
     public static void reOrder(List<Integer> values) {
-
         if (values.get(1) > values.get(0)) {
             int temp = values.get(0);
             values.set(0, values.get(1));
             values.set(1, temp);
         }
-
     }
 
     /**
@@ -249,31 +240,34 @@ public class PokerSolverOnList {
      * @return The recommendation for the player to raise, call, or fold.
      */
     public static String recommendationForUTG(List<Integer> values,
-            List<String> suits) {
-
+            List<Suit> suits) {
         int value1 = values.get(0);
         int value2 = values.get(1);
         boolean isSuited = suits.get(0).equals(suits.get(1));
 
-        if (value1 == value2 && value1 >= CardConstants.FIVE) {
+        if (value1 == value2 && value1 >= Rank.FIVE.getValue()) {
             return "Raise";
         }
 
         if (isSuited) {
-            if (value1 == CardConstants.ACE && value2 >= CardConstants.THREE) {
+            if (value1 == Rank.ACE.getValue()
+                    && value2 >= Rank.THREE.getValue()) {
                 return "Raise";
             }
-            if (value1 >= CardConstants.TEN && value2 >= CardConstants.NINE) {
-                if (!(value1 == CardConstants.JACK
-                        && value2 == CardConstants.NINE)) {
+            if (value1 >= Rank.TEN.getValue()
+                    && value2 >= Rank.NINE.getValue()) {
+                if (!(value1 == Rank.JACK.getValue()
+                        && value2 == Rank.NINE.getValue())) {
                     return "Raise";
                 }
             }
         } else {
-            if (value1 == CardConstants.ACE && value2 >= CardConstants.JACK) {
+            if (value1 == Rank.ACE.getValue()
+                    && value2 >= Rank.JACK.getValue()) {
                 return "Raise";
             }
-            if (value1 == CardConstants.KING && value2 == CardConstants.QUEEN) {
+            if (value1 == Rank.KING.getValue()
+                    && value2 == Rank.QUEEN.getValue()) {
                 return "Raise";
             }
         }
@@ -290,58 +284,38 @@ public class PokerSolverOnList {
      * @return The recommendation for the player to raise, call, or fold.
      */
     public static String recommendationForUTG1(List<Integer> values,
-            List<String> suits) {
-
+            List<Suit> suits) {
         int value1 = values.get(0);
         int value2 = values.get(1);
         boolean isSuited = suits.get(0).equals(suits.get(1));
 
-        if (value1 == value2 && value1 >= CardConstants.SIX) {
+        if (value1 == value2 && value1 >= Rank.SIX.getValue()) {
             return "Raise";
         }
 
         if (isSuited) {
-            if (value1 == CardConstants.ACE && value2 >= CardConstants.THREE) {
+            if (value1 == Rank.ACE.getValue()
+                    && value2 >= Rank.THREE.getValue()) {
                 return "Raise";
             }
-            if (value1 >= CardConstants.NINE && value2 >= CardConstants.EIGHT) {
-                if (!(value1 == CardConstants.QUEEN
-                        || value1 == CardConstants.JACK
-                                && value2 == CardConstants.EIGHT)) {
+            if (value1 >= Rank.NINE.getValue()
+                    && value2 >= Rank.EIGHT.getValue()) {
+                if (!(value1 == Rank.QUEEN.getValue()
+                        || value1 == Rank.JACK.getValue()
+                                && value2 == Rank.EIGHT.getValue())) {
                     return "Raise";
                 }
             }
         } else {
-            if (value1 == CardConstants.ACE && value2 >= CardConstants.TEN) {
+            if (value1 == Rank.ACE.getValue()
+                    && value2 >= Rank.TEN.getValue()) {
                 return "Raise";
             }
-            if (value1 == CardConstants.KING && value2 == CardConstants.QUEEN) {
+            if (value1 == Rank.KING.getValue()
+                    && value2 == Rank.QUEEN.getValue()) {
                 return "Raise";
             }
         }
         return "Fold";
-    }
-
-    /**
-     * Converts face cards to numeric values.
-     *
-     * @param value
-     *            String representation of the card values.
-     * @return The numeric value of the card.
-     * @ensures parseCardValue = corresponding numeric value of face card.
-     */
-    private static int parseCardValue(String value) {
-        switch (value) {
-            case "j":
-                return CardConstants.JACK;
-            case "q":
-                return CardConstants.QUEEN;
-            case "k":
-                return CardConstants.KING;
-            case "a":
-                return CardConstants.ACE;
-            default:
-                return Integer.parseInt(value);
-        }
     }
 }
