@@ -89,8 +89,14 @@ public final class PokerSolverUI extends JFrame {
     private static final int DECK_W = 42;
     /** Deck card height. */
     private static final int DECK_H = 58;
-    /** Range grid cell size. */
-    private static final int CELL = 30;
+    /** Preferred range grid cell size. */
+    private static final int CELL = 28;
+    /** Smallest range grid cell size. */
+    private static final int MIN_CELL = 16;
+    /** Minimum window width. */
+    private static final int MIN_W = 1000;
+    /** Minimum window height. */
+    private static final int MIN_H = 600;
     /** Grid dimension. */
     private static final int GRID = 13;
     /** Corner radius. */
@@ -180,10 +186,21 @@ public final class PokerSolverUI extends JFrame {
         this.opponents.addChangeListener(e -> this.update());
         this.pot.addChangeListener(e -> this.update());
         this.bet.addChangeListener(e -> this.update());
+        for (JSpinner sp : new JSpinner[] { this.opponents, this.pot,
+            this.bet }) {
+            // Apply typed numbers immediately, not only on Enter.
+            ((javax.swing.text.DefaultFormatter) ((JSpinner.DefaultEditor) sp
+                    .getEditor()).getTextField().getFormatter())
+                            .setCommitsOnValidEdit(true);
+        }
 
         this.update();
         this.pack();
-        this.setMinimumSize(this.getSize());
+        java.awt.Rectangle screen = java.awt.GraphicsEnvironment
+                .getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        this.setSize(Math.min(this.getWidth(), screen.width),
+                Math.min(this.getHeight(), screen.height));
+        this.setMinimumSize(new Dimension(MIN_W, MIN_H));
         this.setLocationRelativeTo(null);
     }
 
@@ -291,7 +308,10 @@ public final class PokerSolverUI extends JFrame {
         }
         dealt.add(handPanel);
         dealt.add(boardPanel);
-        center.add(dealt, BorderLayout.NORTH);
+        JPanel top = new JPanel();
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
+        top.setOpaque(false);
+        top.add(dealt);
 
         JPanel deck = new JPanel(new GridLayout(Card.Suit.values().length,
                 GRID, 3, 3));
@@ -311,20 +331,15 @@ public final class PokerSolverUI extends JFrame {
         JPanel deckWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         deckWrap.setOpaque(false);
         deckWrap.add(deck);
-        center.add(deckWrap, BorderLayout.CENTER);
+        top.add(deckWrap);
+        center.add(top, BorderLayout.NORTH);
 
-        JPanel gridWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        JPanel gridWrap = new JPanel(new BorderLayout(0, 4));
         gridWrap.setBackground(FELT_DARK);
         gridWrap.setBorder(this.rangeBorder);
-        JPanel gridCol = new JPanel(new BorderLayout(0, 4));
-        gridCol.setOpaque(false);
-        gridCol.add(this.rangeGrid, BorderLayout.CENTER);
-        gridCol.add(legend(), BorderLayout.SOUTH);
-        gridWrap.add(gridCol);
-        JPanel south = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        south.setOpaque(false);
-        south.add(gridWrap);
-        center.add(south, BorderLayout.SOUTH);
+        gridWrap.add(this.rangeGrid, BorderLayout.CENTER);
+        gridWrap.add(legend(), BorderLayout.SOUTH);
+        center.add(gridWrap, BorderLayout.CENTER);
         return center;
     }
 
@@ -861,6 +876,8 @@ public final class PokerSolverUI extends JFrame {
         RangeGrid() {
             this.setPreferredSize(new Dimension(CELL * GRID + 1,
                     CELL * GRID + 1));
+            this.setMinimumSize(new Dimension(MIN_CELL * GRID + 1,
+                    MIN_CELL * GRID + 1));
             this.setToolTipText("");
         }
 
@@ -879,11 +896,26 @@ public final class PokerSolverUI extends JFrame {
             this.repaint();
         }
 
+        /**
+         * @return current cell size, fitted to the component
+         */
+        private int cell() {
+            return Math.max(1, (Math.min(this.getWidth(), this.getHeight())
+                    - 1) / GRID);
+        }
+
+        /**
+         * @return left edge that centers the grid horizontally
+         */
+        private int left() {
+            return (this.getWidth() - this.cell() * GRID) / 2;
+        }
+
         @Override
         public String getToolTipText(MouseEvent e) {
-            int col = e.getX() / CELL;
-            int row = e.getY() / CELL;
-            if (row >= GRID || col >= GRID) {
+            int col = Math.floorDiv(e.getX() - this.left(), this.cell());
+            int row = e.getY() / this.cell();
+            if (row < 0 || col < 0 || row >= GRID || col >= GRID) {
                 return null;
             }
             String code = PreflopCharts.gridCode(row, col);
@@ -896,26 +928,35 @@ public final class PokerSolverUI extends JFrame {
             Graphics2D g = (Graphics2D) g0.create();
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
+            final int cell = this.cell();
+            final int x0 = this.left();
+            // Largest font (up to 3/8 of a cell) where every label fits.
+            int size = Math.max(6, cell * 3 / 8);
+            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, size));
+            while (size > 6 && g.getFontMetrics().stringWidth("QQo") > cell
+                    - 2) {
+                size--;
+                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, size));
+            }
             FontMetrics fm = g.getFontMetrics();
             for (int row = 0; row < GRID; row++) {
                 for (int col = 0; col < GRID; col++) {
                     String code = PreflopCharts.gridCode(row, col);
                     Action a = PreflopCharts.action(this.position,
                             this.situation, code);
-                    int x = col * CELL;
-                    int y = row * CELL;
+                    int x = x0 + col * cell;
+                    int y = row * cell;
                     g.setColor(colorFor(a));
-                    g.fillRect(x, y, CELL, CELL);
+                    g.fillRect(x, y, cell, cell);
                     g.setColor(FELT_DARK);
-                    g.drawRect(x, y, CELL, CELL);
+                    g.drawRect(x, y, cell, cell);
                     g.setColor(a == Action.FOLD ? MUTED : Color.WHITE);
-                    g.drawString(code, x + (CELL - fm.stringWidth(code)) / 2,
-                            y + (CELL + fm.getAscent()) / 2 - 2);
+                    g.drawString(code, x + (cell - fm.stringWidth(code)) / 2,
+                            y + (cell + fm.getAscent()) / 2 - 2);
                     if (code.equals(this.heroCode)) {
                         g.setColor(GOLD);
                         g.setStroke(new BasicStroke(3f));
-                        g.drawRect(x + 1, y + 1, CELL - 2, CELL - 2);
+                        g.drawRect(x + 1, y + 1, cell - 2, cell - 2);
                         g.setStroke(new BasicStroke(1f));
                     }
                 }
