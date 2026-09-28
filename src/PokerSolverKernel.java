@@ -1,72 +1,59 @@
 import java.util.List;
 
-import components.standard.Standard;
-
 /**
- * Kernel interface for a poker solver.
+ * Kernel interface for a poker solver. The kernel models the hero's hand: a
+ * collection of at most two distinct hole cards.
  */
-public interface PokerSolverKernel extends Standard<PokerSolverOnList> {
+public interface PokerSolverKernel {
 
     /**
-     * Adds a card to players hand.
+     * Maximum number of hole cards (Texas Hold'em).
+     */
+    int MAX_CARDS = 2;
+
+    /**
+     * Adds a card to the player's hand.
      *
      * @param card
-     *            The card in the expected format.
-     * @requires card != null
-     * @ensures c\The card is added to the player's hand.
+     *            the card, e.g. "Ah", "10d", "Tc"
+     * @throws IllegalArgumentException
+     *             if the card is malformed or already in the hand
+     * @requires card != null and handSize() < MAX_CARDS
+     * @ensures the parsed card is appended to the hand
      */
     void addCard(String card);
 
     /**
-     * Returns list of cards in the player's hand.
+     * Removes and returns the card at a position in the hand.
      *
-     * @return A list of the players cards.
-     * @ensures getPlayerCards returns the players hand.
+     * @param index
+     *            position of the card
+     * @return the removed card
+     * @requires 0 <= index < handSize()
+     * @ensures the card at index is removed from the hand
      */
-    List<PokerSolverOnList.Card> getPlayerCards();
+    Card removeCard(int index);
 
     /**
-     * Provides a recommendation for the player based on position and cards.
+     * Returns a copy of the cards in the player's hand.
      *
-     * @param position
-     *            The player's position at the table.
-     * @param playerCards
-     *            The player's cards.
-     * @return if the player should call, raise, or fold.
-     * @requires position != 0 && playerCards != null
-     * @ensures recommendation = raise, call, or fold
+     * @return the player's cards, in the order added
+     * @ensures the hand is unchanged
      */
-    boolean recommendation(int position,
-            List<PokerSolverOnList.Card> playerCards);
+    List<Card> getPlayerCards();
 
     /**
-     * Reorders values so the larger one is first in the list.
+     * Returns the number of cards in the hand.
      *
-     * @param values
-     *            values of each card.
+     * @return the hand size
+     * @ensures handSize = |hand|
      */
-    void reOrder(List<Integer> values);
+    int handSize();
 
     /**
-     * Provides a specific recommendation for a player UTG.
+     * Empties the hand.
      *
-     * @param values
-     *            values of each card.
-     * @param suits
-     *            suits of each card.
-     * @return if the player should call, raise or fold.
-     * @requires values != null && suits != null
-     * @ensures recommendationForUTG = raise, call, or fold
+     * @ensures handSize() = 0
      */
-    boolean recommendationForUTG(List<Integer> values, List<String> suits);
-
-    /**
-     * Converts face cards to their numeric values.
-     *
-     * @param value
-     *            String representation of card values.
-     * @return The numeric value of the card.
-     * @ensures parseCardValue = corresponding numeric value of face card.
-     */
-    int parseCardValue(String value);
+    void clear();
 }

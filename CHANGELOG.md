@@ -8,6 +8,33 @@ the following form: YYYY.0M.0D.
 
 ## [Unreleased]
 
+## [2026.09.28]
+
+### Added
+
+- Swing desktop UI (`PokerSolverUI`) with card picker, live recommendation,
+  equity bar and a 13x13 preflop range chart
+- 5-7 card `HandEvaluator` and Monte Carlo `EquityCalculator`
+- `PreflopCharts` with opening, 3-bet, calling and defending ranges for all
+  nine seats, plus responses to 3-bets and all-ins
+- Postflop advice based on equity versus pot odds
+- `PokerSolver` enhanced interface, `PokerSolverSecondary` abstract class,
+  and `Card`, `Position`, `Action`, `Advice` types
+- JUnit tests for every component
+
+### Changed
+
+- `PokerSolverKernel` now matches the implementation and no longer depends
+  on the OSU components library
+- `PokerSolverOnList` rejects duplicate cards and more than two hole cards
+- Console app supports all nine seats, board cards, opponents, pot and bet,
+  validates input, and can be exited with `q`
+
+### Fixed
+
+- UTG+1 chart no longer folds every suited queen
+- Card parsing accepts `T`/`10` and upper-case suits
+
 ## [2024.08.07]
 
 ### Added
